@@ -8,7 +8,10 @@ import pc from "picocolors";
 import { execSync } from "child_process";
 import { copyDirectory, updatePackageName, removeIfExists } from "./utils.js";
 import { setupZustand, removeZustand } from "./setup-zustand.js";
-import { setupReactTailwindUI, setupNextjsTailwindUI } from "./setup-tailwind-ui.js";
+import {
+  setupReactTailwindUI,
+  setupNextjsTailwindUI,
+} from "./setup-tailwind-ui.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,9 +23,54 @@ const onCancel = () => {
 };
 
 async function main() {
+  const arg = process.argv[2];
+
+  // Handle --version, -v
+  if (arg === "--version" || arg === "-v") {
+    const pkg = JSON.parse(
+      await fs.readFile(path.join(__dirname, "..", "package.json"), "utf-8")
+    );
+    console.log(pkg.version);
+    process.exit(0);
+  }
+  // Handle --help, -h
+  if (arg === "--help" || arg === "-h") {
+    console.log(`
+    ${pc.cyan(
+      "create-unistack"
+    )} - A modern, extensible project generator for full-stack applications.
+
+    ${pc.bold("Usage:")}
+      npx create-unistack [project-name]
+
+    ${pc.bold("Options:")}
+      -v, --version    Show version number
+      -h, --help       Show help message
+
+    ${pc.bold("Examples:")}
+      npx create-unistack
+      npx create-unistack my-awesome-app
+
+    ${pc.bold("Templates:")}
+      • React + Vite (TypeScript or JavaScript)
+      • Next.js (TypeScript)
+      • Node.js + Express
+
+    ${pc.bold("Features:")}
+      • Zustand for state management (React only)
+      • TailwindCSS for styling (React & Next.js)
+
+    ${pc.bold("Repository:")}
+      https://github.com/marcel-poroch/create-unistack
+
+    ${pc.bold("Issues:")}
+      https://github.com/marcel-poroch/create-unistack/issues
+    `);
+    process.exit(0);
+  }
+
   console.log(pc.cyan("✨ Welcome to create-modern-react-stack ✨\n"));
 
-  const arg = process.argv[2];
   let projectPath = arg;
 
   if (!projectPath) {
@@ -32,7 +80,7 @@ async function main() {
         name: "path",
         message: "What should your project be called?",
         initial: "my-project",
-        validate: v => !!v.trim() || "Project name required"
+        validate: (v) => !!v.trim() || "Project name required",
       },
       { onCancel }
     );
@@ -50,7 +98,7 @@ async function main() {
         type: "confirm",
         name: "value",
         message: `Directory "${projectName}" exists. Overwrite?`,
-        initial: false
+        initial: false,
       },
       { onCancel }
     );
@@ -68,8 +116,8 @@ async function main() {
         { title: "React + Vite (TypeScript)", value: "react-ts-vite" },
         { title: "React + Vite (JavaScript)", value: "react-js-vite" },
         { title: "Next.js (TypeScript)", value: "nextjs-ts" },
-        { title: "Node.js (Express)", value: "node-express" }
-      ]
+        { title: "Node.js (Express)", value: "node-express" },
+      ],
     },
     { onCancel }
   );
@@ -85,8 +133,8 @@ async function main() {
         message: "State manager?",
         choices: [
           { title: "None", value: "none" },
-          { title: "Zustand", value: "zustand" }
-        ]
+          { title: "Zustand", value: "zustand" },
+        ],
       },
       { onCancel }
     );
@@ -99,8 +147,8 @@ async function main() {
         message: "Styling system?",
         choices: [
           { title: "None", value: "none" },
-          { title: "TailwindCSS", value: "tailwind" }
-        ]
+          { title: "TailwindCSS", value: "tailwind" },
+        ],
       },
       { onCancel }
     );
@@ -114,7 +162,7 @@ async function main() {
       message: "Run npm install?",
       active: "yes",
       inactive: "no",
-      initial: true
+      initial: true,
     },
     { onCancel }
   );
@@ -140,25 +188,25 @@ async function main() {
     await removeIfExists(path.join(targetDir, "postcss.config.js"));
   }
 
-// INSTALL TAILWIND
-if (styling === "tailwind") {
-  console.log(pc.blue("\nAdding Tailwind..."));
+  // INSTALL TAILWIND
+  if (styling === "tailwind") {
+    console.log(pc.blue("\nAdding Tailwind..."));
 
-  // Install dependencies (pin to stable Tailwind v3)
-  execSync("npm install -D tailwindcss@3.4.13 postcss autoprefixer", {
-    cwd: targetDir,
-    stdio: "inherit",
-    shell: true
-  });
+    // Install dependencies (pin to stable Tailwind v3)
+    execSync("npm install -D tailwindcss@3.4.13 postcss autoprefixer", {
+      cwd: targetDir,
+      stdio: "inherit",
+      shell: true,
+    });
 
-  // Determine content paths based on template
-  const isNextjs = template === "nextjs-ts";
-  const contentPaths = isNextjs
-    ? ["./app/**/*.{js,ts,jsx,tsx}"]
-    : ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"];
+    // Determine content paths based on template
+    const isNextjs = template === "nextjs-ts";
+    const contentPaths = isNextjs
+      ? ["./app/**/*.{js,ts,jsx,tsx}"]
+      : ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"];
 
-  // Create tailwind.config.js
-  const tailwindConfig = `/** @type {import('tailwindcss').Config} */
+    // Create tailwind.config.js
+    const tailwindConfig = `/** @type {import('tailwindcss').Config} */
 export default {
   content: ${JSON.stringify(contentPaths)},
   theme: { extend: {} },
@@ -166,13 +214,13 @@ export default {
 }
 `.trim();
 
-  await fs.writeFile(
-    path.join(targetDir, "tailwind.config.js"),
-    tailwindConfig
-  );
+    await fs.writeFile(
+      path.join(targetDir, "tailwind.config.js"),
+      tailwindConfig
+    );
 
-  // Create postcss.config.js
-  const postcssConfig = `export default {
+    // Create postcss.config.js
+    const postcssConfig = `export default {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
@@ -180,61 +228,54 @@ export default {
 }
 `.trim();
 
-  await fs.writeFile(
-    path.join(targetDir, "postcss.config.js"),
-    postcssConfig
-  );
+    await fs.writeFile(
+      path.join(targetDir, "postcss.config.js"),
+      postcssConfig
+    );
 
-  // Create/update CSS file based on template
-  const tailwindCss = `@tailwind base;
+    // Create/update CSS file based on template
+    const tailwindCss = `@tailwind base;
 @tailwind components;
 @tailwind utilities;
 `;
 
-  if (isNextjs) {
-    // Next.js: create app/globals.css
-    await fs.writeFile(
-      path.join(targetDir, "app", "globals.css"),
-      tailwindCss
-    );
+    if (isNextjs) {
+      // Next.js: create app/globals.css
+      await fs.writeFile(
+        path.join(targetDir, "app", "globals.css"),
+        tailwindCss
+      );
 
-    // Update layout.tsx to import globals.css
-    const layoutPath = path.join(targetDir, "app", "layout.tsx");
-    try {
-      let layoutContent = await fs.readFile(layoutPath, "utf-8");
-      if (!layoutContent.includes("globals.css")) {
-        layoutContent = `import "./globals.css";\n${layoutContent}`;
-        await fs.writeFile(layoutPath, layoutContent);
-      }
-    } catch {}
-  } else {
-    // Vite: update src/index.css
-    await fs.writeFile(
-      path.join(targetDir, "src", "index.css"),
-      tailwindCss
-    );
-  }
+      // Update layout.tsx to import globals.css
+      const layoutPath = path.join(targetDir, "app", "layout.tsx");
+      try {
+        let layoutContent = await fs.readFile(layoutPath, "utf-8");
+        if (!layoutContent.includes("globals.css")) {
+          layoutContent = `import "./globals.css";\n${layoutContent}`;
+          await fs.writeFile(layoutPath, layoutContent);
+        }
+      } catch {}
+    } else {
+      // Vite: update src/index.css
+      await fs.writeFile(path.join(targetDir, "src", "index.css"), tailwindCss);
+    }
 
-  // Add a simple Tailwind-flavored UI so the page looks styled out of the box
-  if (template === "react-ts-vite" || template === "react-js-vite") {
-    await setupReactTailwindUI(targetDir, template, stateManager);
-  } else if (template === "nextjs-ts") {
-    await setupNextjsTailwindUI(targetDir);
-  }
+    // Add a simple Tailwind-flavored UI so the page looks styled out of the box
+    if (template === "react-ts-vite" || template === "react-js-vite") {
+      await setupReactTailwindUI(targetDir, template, stateManager);
+    } else if (template === "nextjs-ts") {
+      await setupNextjsTailwindUI(targetDir);
+    }
 
-  // Create VS Code settings to fix @tailwind linter warnings
-  const vscodeDir = path.join(targetDir, ".vscode");
-  await fs.mkdir(vscodeDir, { recursive: true });
-  const vscodeSettings = `{
+    // Create VS Code settings to fix @tailwind linter warnings
+    const vscodeDir = path.join(targetDir, ".vscode");
+    await fs.mkdir(vscodeDir, { recursive: true });
+    const vscodeSettings = `{
   "css.lint.unknownAtRules": "ignore"
 }
 `;
-  await fs.writeFile(
-    path.join(vscodeDir, "settings.json"),
-    vscodeSettings
-  );
-}
-
+    await fs.writeFile(path.join(vscodeDir, "settings.json"), vscodeSettings);
+  }
 
   // Install deps
   if (installDeps) {
@@ -243,7 +284,7 @@ export default {
       execSync("npm install", {
         cwd: targetDir,
         stdio: "inherit",
-        shell: true
+        shell: true,
       });
     } catch {
       console.log(pc.red("⚠ npm install failed"));
