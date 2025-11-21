@@ -31,3 +31,11 @@ For React projects, you can choose to add:
 - **TailwindCSS** for styling
 
 Everything is configured automatically, no headaches.
+
+## Contributing
+
+Found a bug or have a suggestion? Please [open an issue](https://github.com/marcel-poroch/create-unistack/issues) on GitHub.
+
+## Repository
+
+The source code is available on [GitHub](https://github.com/marcel-poroch/create-unistack).
