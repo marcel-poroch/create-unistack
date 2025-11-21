@@ -1,0 +1,35 @@
+{
+  "name": "create-unistack",
+  "version": "1.0.5",
+  "description": "A modern, extensible project generator for full-stack applications.",
+  "type": "module",
+  "bin": {
+    "create-unistack": "bin/cli.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "templates",
+    "README.md"
+  ],
+  "keywords": [
+    "cli",
+    "react",
+    "vite",
+    "typescript",
+    "zustand",
+    "boilerplate",
+    "scaffold"
+  ],
+  "license": "MIT",
+  "author": "Marcel Poroch",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "picocolors": "^1.0.0",
+    "prompts": "^2.4.2"
+  }
+}
