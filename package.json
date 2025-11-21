@@ -1,8 +1,16 @@
 {
   "name": "create-unistack",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A modern, extensible project generator for full-stack applications.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcel-poroch/create-unistack.git"
+  },
+  "bugs": {
+    "url": "https://github.com/marcel-poroch/create-unistack/issues"
+  },
+  "homepage": "https://github.com/marcel-poroch/create-unistack#readme",
   "bin": {
     "create-unistack": "bin/cli.js"
   },
@@ -33,3 +41,4 @@
     "prompts": "^2.4.2"
   }
 }
+
