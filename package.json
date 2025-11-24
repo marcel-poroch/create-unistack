@@ -1,6 +1,6 @@
 {
   "name": "create-unistack",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A modern, extensible project generator for full-stack applications.",
   "type": "module",
   "repository": {
