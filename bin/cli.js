@@ -125,7 +125,7 @@ async function main() {
   let stateManager = "none";
   let styling = "none";
 
-  if (template.startsWith("react")) {
+  if (template.startsWith("react") || template === "nextjs-ts") {
     const sm = await prompts(
       {
         type: "select",
@@ -175,7 +175,7 @@ async function main() {
 
   // Zustand
   if (stateManager === "none") {
-    await removeZustand(targetDir);
+    await removeZustand(targetDir, template);
   }
 
   if (stateManager === "zustand") {
@@ -264,7 +264,7 @@ export default {
     if (template === "react-ts-vite" || template === "react-js-vite") {
       await setupReactTailwindUI(targetDir, template, stateManager);
     } else if (template === "nextjs-ts") {
-      await setupNextjsTailwindUI(targetDir);
+      await setupNextjsTailwindUI(targetDir, stateManager);
     }
 
     // Create VS Code settings to fix @tailwind linter warnings

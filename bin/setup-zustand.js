@@ -16,10 +16,15 @@ export async function stripZustandFromApp(appFile) {
 }
 
 // Remove Zustand setup
-export async function removeZustand(targetDir) {
-  await removeIfExists(path.join(targetDir, "src", "store"));
-  await stripZustandFromApp(path.join(targetDir, "src", "App.tsx"));
-  await stripZustandFromApp(path.join(targetDir, "src", "App.jsx"));
+export async function removeZustand(targetDir, template) {
+  if (template === "nextjs-ts") {
+    await removeIfExists(path.join(targetDir, "lib", "store"));
+    await removeIfExists(path.join(targetDir, "app", "components"));
+  } else {
+    await removeIfExists(path.join(targetDir, "src", "store"));
+    await stripZustandFromApp(path.join(targetDir, "src", "App.tsx"));
+    await stripZustandFromApp(path.join(targetDir, "src", "App.jsx"));
+  }
 }
 
 // Setup Zustand
@@ -33,48 +38,58 @@ export async function setupZustand(targetDir, template) {
     shell: true,
   });
 
+  const isNextjs = template === "nextjs-ts";
   const isTsReact = template === "react-ts-vite";
-  const appExt = isTsReact ? "tsx" : "jsx";
-  const storeExt = isTsReact ? "ts" : "js";
+  const appExt = isTsReact || isNextjs ? "tsx" : "jsx";
+  const storeExt = isTsReact || isNextjs ? "ts" : "js";
   const componentExt = appExt;
 
-  const storeDir = path.join(targetDir, "src", "store");
+  // For Next.js, use lib/store (best practice), for React use src/store
+  const storeDir = isNextjs
+    ? path.join(targetDir, "lib", "store")
+    : path.join(targetDir, "src", "store");
   await fs.mkdir(storeDir, { recursive: true });
 
-  const storeContent = isTsReact
+  // Next.js uses TypeScript, so use TypeScript format
+  const storeContent = (isTsReact || isNextjs)
     ? `import { create } from "zustand";
 
-        type AppState = {
-          count: number;
-          increment: () => void;
-          decrement: () => void;
-        };
+type AppState = {
+  count: number;
+  increment: () => void;
+  decrement: () => void;
+};
 
-        export const useAppStore = create<AppState>((set) => ({
-          count: 0,
-          increment: () => set((state) => ({ count: state.count + 1 })),
-          decrement: () => set((state) => ({ count: state.count - 1 }))
-        }));
-        `
+export const useAppStore = create<AppState>((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 }))
+}));
+`
     : `import { create } from "zustand";
 
-        export const useAppStore = create((set) => ({
-          count: 0,
-          increment: () => set((state) => ({ count: state.count + 1 })),
-          decrement: () => set((state) => ({ count: state.count - 1 }))
-        }));
-    `;
+export const useAppStore = create((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 }))
+}));
+`;
 
   await fs.writeFile(
     path.join(storeDir, `useAppStore.${storeExt}`),
     storeContent
   );
 
-  const componentsDir = path.join(targetDir, "src", "components");
+  const componentsDir = isNextjs
+    ? path.join(targetDir, "app", "components")
+    : path.join(targetDir, "src", "components");
   await fs.mkdir(componentsDir, { recursive: true });
 
-  const counterContent = isTsReact
-    ? `import { useAppStore } from "../store/useAppStore";
+  // Import paths: Next.js components are in app/components, store in lib/store
+  const storeImportPath = isNextjs ? "../../lib/store/useAppStore" : "../store/useAppStore";
+
+  const counterContent = (isTsReact || isNextjs)
+    ? `${isNextjs ? '"use client";\n\n' : ''}import { useAppStore } from "${storeImportPath}";
 
         export function Counter() {
           const { count, increment, decrement } = useAppStore();
@@ -115,6 +130,11 @@ export async function setupZustand(targetDir, template) {
     path.join(componentsDir, `Counter.${componentExt}`),
     counterContent
   );
+
+  // Only create App.tsx/jsx for React templates, not Next.js
+  if (isNextjs) {
+    return; // Next.js uses app/page.tsx, which will be handled by setupNextjsTailwindUI
+  }
 
   const appPath = path.join(targetDir, "src", `App.${appExt}`);
   const appContent = isTsReact
